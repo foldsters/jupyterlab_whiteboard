@@ -12,7 +12,7 @@ A simple sketchpad for jupyter
 ## Install
 
 ```bash
-jupyter labextension install jupyterlab_whiteboard
+jupyter labextension install @foldsters/jupyterlab_whiteboard
 ```
 
 ## Contributing
