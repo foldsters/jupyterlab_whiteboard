@@ -1,9 +1,9 @@
 import {
-  JupyterFrontEnd, JupyterFrontEndPlugin
+  ILayoutRestorer, JupyterFrontEnd, JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
 import {
-  ICommandPalette, MainAreaWidget
+  ICommandPalette, MainAreaWidget, WidgetTracker
 } from '@jupyterlab/apputils';
 
 import {
@@ -97,27 +97,35 @@ class WBWidget extends Widget {
 /**
 * Activate the WB widget extension.
 */
-function activate(app: JupyterFrontEnd, palette: ICommandPalette) {
+function activate(app: JupyterFrontEnd, palette: ICommandPalette, restorer: ILayoutRestorer) {
   console.log('JupyterLab extension jupyterlab_wb is activated!');
 
-  // Create a single widget
-  const content = new WBWidget();
-  const widget = new MainAreaWidget({content});
-  widget.id = 'wb-jupyterlab';
-  widget.title.label = 'Whiteboard';
-  widget.title.closable = true;
+  // Declare a widget variable
+  let widget: MainAreaWidget<WBWidget>;
 
   // Add an application command
   const command: string = 'wb:open';
   app.commands.addCommand(command, {
     label: 'Whiteboard',
     execute: () => {
+      if (!widget) {
+        // Create a new widget if one does not exist
+        const content = new WBWidget();
+        widget = new MainAreaWidget({content});
+        widget.id = 'wb-jupyterlab';
+        widget.title.label = 'Whiteboard';
+        widget.title.closable = true;
+      }
+      if (!tracker.has(widget)) {
+        // Track the state of the widget for later restoration
+        tracker.add(widget);
+      }
       if (!widget.isAttached) {
         // Attach the widget to the main work area if it's not there
         app.shell.add(widget, 'main');
       }
-      // Refresh the picture in the widget
-      content.update();
+      widget.content.update();
+
       // Activate the widget
       app.shell.activateById(widget.id);
     }
@@ -125,6 +133,15 @@ function activate(app: JupyterFrontEnd, palette: ICommandPalette) {
 
   // Add the command to the palette.
   palette.addItem({ command, category: 'Tutorial' });
+
+  // Track and restore the widget state
+  let tracker = new WidgetTracker<MainAreaWidget<WBWidget>>({
+    namespace: 'wb'
+  });
+  restorer.restore(tracker, {
+    command,
+    name: () => 'wb'
+  });
 }
 
 /**
@@ -132,9 +149,9 @@ function activate(app: JupyterFrontEnd, palette: ICommandPalette) {
  */
 
 const extension: JupyterFrontEndPlugin<void> = {
-  id: 'jupyterlab_apod',
+  id: 'jupyterlab_wb',
   autoStart: true,
-  requires: [ICommandPalette],
+  requires: [ICommandPalette, ILayoutRestorer],
   activate: activate
 };
 
