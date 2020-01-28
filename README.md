@@ -50,6 +50,6 @@ jupyter lab --watch
 ### Uninstall
 
 ```bash
-jupyter labextension uninstall jupyterlab_whiteboard
+jupyter labextension uninstall @foldsters/jupyterlab_whiteboard
 ```
 
